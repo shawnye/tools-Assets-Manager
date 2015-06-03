@@ -1,5 +1,7 @@
 local M = {}
 
+local math = require"math"
+local os = require"os"
 local io = require"io"
 local reader = require"simple_xlsx_reader"
 
@@ -35,6 +37,7 @@ print(x:fmt("%Y-%m-%d"))
 local x = nil --tmp date object
 local pos = nil
 local v = nil
+local encoding = nil --default: utf-8
 
 function createCsv(cell) --dimension, type, position, value, formula, rowNum
     --[[
@@ -81,20 +84,23 @@ function createCsv(cell) --dimension, type, position, value, formula, rowNum
       end
 
 
-
-
-
---print("writing row " .. cell.rowNum)
-       --csvw.write(currentRow) -- FC
-
       currentRow = resetTable(currentRow) or {}
       lastRowNum = cell.rowNum
       --io.write("\n" .. lastRowNum .. ">")
-      currentRow[#currentRow+1] = v  --append
+      if encoding == '2' then
+
+        v = ansicode.u82a(v)
+      end
+
+       currentRow[#currentRow+1] = v  --append
 
     else
+
+      if encoding == '2' then
+        v = ansicode.u82a(v)
+      end
       currentRow[#currentRow+1] = v
-     end
+    end
 
    return true
 end
@@ -106,9 +112,13 @@ M.do_import = function(components,iup)
      local file_path = components.text_location.value
 
     local start = date()
-
-    components.appendLog( start:fmt("%Y-%m-%d %H:%M:%S") .. " > 导入..." .. components.text_location.value )
+    --start:fmt("%Y-%m-%d %H:%M:%S")
+    components.appendLog( os.date("%Y-%m-%d %H:%M:%S") .. " > 导入..." .. components.text_location.value )
     components.progressbar.value = 0
+
+    encoding = components.encoding_list.value
+
+    --print('selected encoding=' .. encoding)
 
     local ansi_str = ansicode.u82a(file_path)
 
@@ -120,7 +130,7 @@ M.do_import = function(components,iup)
     end
 
     --"full": 完全缓冲；只有在缓存满或当你显式的对文件调用 flush（参见 io.flush） 时才真正做输出操作。
-    f:setvbuf ("full" , 2^13) --8K
+    f:setvbuf ("full" , 2^15) --32K
 
 
     --csvw = csv.writer(ansi_str .. ".csv",",")
@@ -132,7 +142,6 @@ M.do_import = function(components,iup)
 
     --iup.SetIdle(import_idle_cb)
 
-    local math = require"math"
 
     local status, msg = workbook.sheet(1, {
         CellHandler = createCsv,
@@ -179,6 +188,8 @@ M.do_import = function(components,iup)
 
   print("csv created:",file_path .. ".csv")
   components.appendLog("csv 文件创建成功:" .. file_path .. ".csv")
+  components.appendLog("csv 文件编码:" .. components.encoding_list.valuestring)
+
   components.appendLog("文件行数: " .. row_counter - 8 .. " \t,耗时" .. string.format("%.2f", d:spanminutes()) .. "分") --start from 8
 
   print(collectgarbage("count") .. " KB used")

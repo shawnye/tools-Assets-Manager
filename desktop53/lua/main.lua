@@ -19,7 +19,8 @@ local components = {
   btn_browse = iup.button{title="浏览目录...", rastersize="x22",id="btn_browse"},
   btn_browse_dir = iup.button{title="浏览文件...", rastersize="x22",id="btn_browse_dir"},
   btn_import = iup.button{title=" 导入 ", rastersize="x22",id="btn_import"},
-  progressbar = iup.progressbar{ MIN =0, MAX=100, DASHED=1,EXPAND='HORIZONTAL',rastersize="x20" }
+  progressbar = iup.progressbar{ MIN =0, MAX=100, DASHED=1,EXPAND='HORIZONTAL',rastersize="x20" },
+  encoding_list = iup.list{"UTF-8", "ANSI" ; value = 1 , dropdown="YES", title="生成编码"}
 }
 
  components.appendLog = function( msg )
@@ -147,6 +148,9 @@ local tab1 = iup.vbox
       components.text_location,
       --btn_browse,
       components.btn_browse_dir,
+      --encoding ANSI or UTF-8
+      components.encoding_list,
+
       components.btn_import
 
       ; margin="5x5"
